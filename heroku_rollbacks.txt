@@ -1,0 +1,44 @@
+Heroku tools let you create robust, healthy workflows for your apps, from development to production to ongoing delivery. Add other developers to your app with heroku sharing, create homogeneous staging and production apps with heroku fork, and quickly deploy directly from staging to production with pipelines.
+
+Deploying quickly and often is awesome, but with multiple developers and multiple deployments each day, how do you see and manage changes to your app over time? And what happens if you accidentally deploy bad code?
+
+We address these issues with two aspects of the Heroku platform - heroku releases and heroku rollback. heroku releases brings simplicity and visibility to application changes, letting you see releases made to your app, who made them, and when they occurred. With heroku rollback, you can rollback to a previous, known good release in a single command - providing a fast way to revert in case of bad deploys or config changes. In this post, we give a quick overview of releases and rollbacks on Heroku and how to use them.
+
+Releases
+Anytime you deploy code, change your config vars, or add, remove, upgrade or change an Add-on resource, Heroku creates a new release and restarts your app with the changes you made.
+
+To see the history of releases for an app:
+
+$ heroku releases
+Rel   Change                   By                    When
+----  ----------------------   -------------------   -------------
+v52   Config add AWS_S3_KEY    shanley@heroku.com    5 minutes ago
+v51   Deploy de63889           kendra@heroku.com     7 minutes ago
+v50   Deploy 7c35f77           katie@heroku.com      3 hours ago
+The deploy string - in the above example, de63889 - corresponds to the commit hash in your Heroku remote git repository. Use this to correlate changes in a release with changes in your code repository. Call git log -n 1 de63889 to get more detailed information on the commit, including the full commit hash, exact timestamp, and commit message.
+
+You can get additional details on the release, including Add-ons present and config, by calling heroku releases:info vNN, where NN is the release number. Whenever a new release is created, NN is incremented and the release recorded on an append-only ledger. For example:
+
+$ heroku releases:info v24
+=== Release v24
+Change:   Deploy 575bfa8
+By:       shanley@example.com
+When:     6 hours ago
+Addons:   deployhooks:email, releases:advanced
+Config:
+  MY_CONFIG_VAR  => 42
+  RACK_ENV       => production
+Especially for apps that have several or many collaborators, release history helps teams work together with less friction and more visibility. When you start working each day, use release history to see what changes have been made to the app while you were away. Quickly look up commit information in the git logs for additional context. Check the release history before deploying changes to avoid a redundant commit or other error. And if something goes wrong, audit the release history to identify when bad code may have been rolled out.
+
+Rollbacks
+A release is more than just metadata about your app's history - it’s everything needed to run that version of your app. It consists of a full copy of any given releases’ config vars and its slug - a bundle of your source, fetched dependencies and compiled/generated output of the build system, ready for execution. This means you can rollback to a prior, known good version of an app quickly - no re-compilation is required. In the event you deploy bad code, use heroku rollback to restore the previous release. This lets you maintain uptime for your app even when things go wrong, and gives you time to fully dig into the problem and accurately diagnose and remedy it.
+
+To rollback to a specific release, specify the release number:
+
+$ heroku rollback v46
+Rolling back test-rollback... done, v46
+Your release history will reflect the rollback:
+
+$ heroku releases
+v47    Rollback to v46    shanley@heroku.com    2013-07-12 15:32:17 -0700
+Note that the state of the database or any external state held in Add-ons used will not be recorded, so you'll have to reconcile that yourself in the case of a bad deployment. Please note that running a rolled-back version of your app is meant as a temporary fix so you can minimize negative impact to your users while you make the necessary changes to deploy a correct version of your code.
