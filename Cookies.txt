@@ -94,6 +94,10 @@ setcookie('TestCookie', 'The Cookie Value', $arr_cookie_options);
 
 
 
+
+
+
+
 Common Pitfalls:
 
 Cookies will not become visible until the next loading of a page that the cookie should be visible for. To test if a cookie was successfully set, check for the cookie on a next loading page before the cookie expires. Expire time is set via the expires parameter. A nice way to debug the existence of cookies is by simply calling print_r($_COOKIE);.
